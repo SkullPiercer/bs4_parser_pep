@@ -8,7 +8,7 @@ from django.db.models.expressions import result
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL, PEPS_URL
+from constants import BASE_DIR, MAIN_DOC_URL, PEPS_URL, PEP_SECTIONS
 from outputs import control_output
 from utils import get_response, find_tag
 
@@ -89,7 +89,11 @@ def pep(session):
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
-
+    for section in PEP_SECTIONS:
+        content = soup.find('section', attrs={'id': section})
+        table_string = content.find_all('tr')
+        for i in table_string:
+            print(i)
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,

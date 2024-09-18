@@ -8,7 +8,7 @@ from django.db.models.expressions import result
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL, PEPS_URL, PEP_SECTIONS
+from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEPS_URL, PEP_SECTIONS
 from outputs import control_output
 from utils import get_response, find_tag
 
@@ -92,8 +92,13 @@ def pep(session):
     for section in PEP_SECTIONS:
         content = soup.find('section', attrs={'id': section})
         table_string = content.find_all('tr')
-        for i in table_string:
-            print(i)
+        for row in table_string:
+            table_status = row.find('td')
+            if table_status:
+                print(table_status.text[-1])
+            link = row.find('a', attrs={'class':'pep reference internal'})
+            if link:
+                print(link['href'])
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,

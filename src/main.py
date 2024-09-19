@@ -87,14 +87,15 @@ def download(session):
 
 def pep(session):
     status_counter = {
-        'A': 0,
-        'D': 0,
-        'F': 0,
-        'P': 0,
-        'R': 0,
-        'S': 0,
-        'W': 0,
-        '': 0,
+        'Accepted': 0,
+        'Active': 0,
+        'Deferred': 0,
+        'Draft': 0,
+        'Final': 0,
+        'Provisional': 0,
+        'Rejected': 0,
+        'Superseded': 0,
+        'Withdrawn': 0,
     }
     response = get_response(session, PEPS_URL)
     if response is None:
@@ -112,13 +113,17 @@ def pep(session):
                         table_status = ''
                     else:
                         table_status = table_status.text[-1]
-                    status_counter[table_status] += 1
                 link = row.find('a', attrs={'class':'pep reference internal'})
                 if link:
                     pep_url = urljoin(PEPS_URL, link['href'])
                     response = get_response(session, pep_url)
                     soup = BeautifulSoup(response.text, 'lxml')
                     page_status = soup.find('abbr')
+                    try:
+                        status_counter[page_status.text] += 1
+                    except KeyError:
+                        error_msg = f'Неcуществующий статус: {page_status.text}'
+                        logging.error(error_msg)
                     if page_status.text not in EXPECTED_STATUS[table_status]:
                         different_statuses.append(
                             f'{pep_url}\nСтатус в карточке: {page_status.text}\nОжидаевые статусы: {EXPECTED_STATUS[table_status]}'

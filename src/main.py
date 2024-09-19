@@ -1,5 +1,6 @@
 import re
 import logging
+from calendar import different_locale
 from urllib.parse import urljoin
 
 import requests_cache
@@ -99,14 +100,14 @@ def pep(session):
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
+    different_statuses = []
     for section in PEP_SECTIONS:
         content = soup.find('section', attrs={'id': section})
         if content:
             table_string = content.find_all('tr')
-            for row in table_string:
+            for row in tqdm(table_string):
                 table_status = row.find('td')
                 if table_status:
-                    print(table_status.text[-1])
                     if len(table_status.text) == 1:
                         table_status = ''
                     else:
@@ -118,9 +119,16 @@ def pep(session):
                     response = get_response(session, pep_url)
                     soup = BeautifulSoup(response.text, 'lxml')
                     page_status = soup.find('abbr')
-                    print(page_status.text)
+                    if page_status.text not in EXPECTED_STATUS[table_status]:
+                        different_statuses.append(
+                            f'{pep_url}\nСтатус в карточке: {page_status.text}\nОжидаевые статусы: {EXPECTED_STATUS[table_status]}'
+                        )
             print(f'Всего {len(table_string)} статусов')
             print(f'Статусы по категориям {status_counter}')
+            error_msg = f'Несовпадающие статусы:'
+            for err in different_statuses:
+                error_msg += f'\n{err}'
+            logging.error(error_msg)
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,

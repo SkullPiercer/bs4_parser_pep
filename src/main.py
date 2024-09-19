@@ -85,20 +85,42 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 def pep(session):
+    status_counter = {
+        'A': 0,
+        'D': 0,
+        'F': 0,
+        'P': 0,
+        'R': 0,
+        'S': 0,
+        'W': 0,
+        '': 0,
+    }
     response = get_response(session, PEPS_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
     for section in PEP_SECTIONS:
         content = soup.find('section', attrs={'id': section})
-        table_string = content.find_all('tr')
-        for row in table_string:
-            table_status = row.find('td')
-            if table_status:
-                print(table_status.text[-1])
-            link = row.find('a', attrs={'class':'pep reference internal'})
-            if link:
-                print(link['href'])
+        if content:
+            table_string = content.find_all('tr')
+            for row in table_string:
+                table_status = row.find('td')
+                if table_status:
+                    print(table_status.text[-1])
+                    if len(table_status.text) == 1:
+                        table_status = ''
+                    else:
+                        table_status = table_status.text[-1]
+                    status_counter[table_status] += 1
+                link = row.find('a', attrs={'class':'pep reference internal'})
+                if link:
+                    pep_url = urljoin(PEPS_URL, link['href'])
+                    response = get_response(session, pep_url)
+                    soup = BeautifulSoup(response.text, 'lxml')
+                    page_status = soup.find('abbr')
+                    print(page_status.text)
+            print(f'Всего {len(table_string)} статусов')
+            print(f'Статусы по категориям {status_counter}')
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,

@@ -94,7 +94,7 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
-def pep_versions(session):
+def pep(session):
     status_counter = initialize_status_counter()
     response = get_response(session, PEPS_URL)
     if response is None:
@@ -196,7 +196,7 @@ MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
     'download': download,
-    'pep': pep_versions,
+    'pep': pep,
 }
 
 

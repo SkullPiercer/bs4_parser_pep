@@ -9,7 +9,13 @@ from django.db.models.expressions import result
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEPS_URL, PEP_SECTIONS
+from constants import (
+    BASE_DIR,
+    EXPECTED_STATUS,
+    MAIN_DOC_URL,
+    PEPS_URL,
+    PEP_SECTIONS
+)
 from outputs import control_output
 from utils import get_response, find_tag
 
@@ -21,7 +27,9 @@ def whats_new(session):
     soup = BeautifulSoup(response.text, features='lxml')
     main_div = find_tag(soup, 'section', attrs={'id': 'what-s-new-in-python'})
     div_with_ul = main_div.find('div', attrs={'class': 'toctree-wrapper'})
-    sections_by_python = div_with_ul.find_all('li', attrs={'class': 'toctree-l1'})
+    sections_by_python = div_with_ul.find_all(
+        'li', attrs={'class': 'toctree-l1'}
+    )
     results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
     for section in tqdm(sections_by_python):
         version_a_tag = section.find('a')
@@ -123,11 +131,18 @@ def pep(session):
                     try:
                         status_counter[page_status.text] += 1
                     except KeyError:
-                        error_msg = f'Неcуществующий статус: {page_status.text}'
+                        error_msg = (
+                            f'Неcуществующий статус: {page_status.text}'
+                        )
                         logging.error(error_msg)
                     if page_status.text not in EXPECTED_STATUS[table_status]:
                         different_statuses.append(
-                            f'{pep_url}\nСтатус в карточке: {page_status.text}\nОжидаевые статусы: {EXPECTED_STATUS[table_status]}'
+                            (
+                                f'{pep_url}'
+                                f'\nСтатус в карточке: {page_status.text}'
+                                f'\nОжидаевые статусы:'
+                                f' {EXPECTED_STATUS[table_status]}'
+                            )
                         )
             error_msg = f'Несовпадающие статусы:'
             for err in different_statuses:

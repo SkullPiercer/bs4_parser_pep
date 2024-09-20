@@ -1,6 +1,7 @@
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler
+
 from constants import BASE_DIR
 
 
@@ -39,8 +40,6 @@ def configure_logging():
     logging.basicConfig(
         datefmt=DT_FORMAT,
         format=LOG_FORMAT,
-        # Уровень записи логов.
         level=logging.INFO,
-        # Вывод логов в терминал.
         handlers=(rotating_handler, logging.StreamHandler())
     )

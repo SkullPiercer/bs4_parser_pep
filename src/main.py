@@ -102,6 +102,7 @@ def pep(session):
         return
     soup = BeautifulSoup(response.text, 'lxml')
     different_statuses = []
+    results = [('Категория', 'Статус')]
     for section in PEP_SECTIONS:
         content = soup.find('section', attrs={'id': section})
         if content:
@@ -128,12 +129,14 @@ def pep(session):
                         different_statuses.append(
                             f'{pep_url}\nСтатус в карточке: {page_status.text}\nОжидаевые статусы: {EXPECTED_STATUS[table_status]}'
                         )
-            print(f'Всего {len(table_string)} статусов')
-            print(f'Статусы по категориям {status_counter}')
             error_msg = f'Несовпадающие статусы:'
             for err in different_statuses:
                 error_msg += f'\n{err}'
             logging.error(error_msg)
+            for i in status_counter.items():
+                results.append(i)
+            results.append(('Всего', len(table_string)))
+    return results
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,

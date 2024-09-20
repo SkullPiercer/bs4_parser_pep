@@ -1,11 +1,9 @@
-import re
 import logging
-from calendar import different_locale
+import re
 from urllib.parse import urljoin
 
 import requests_cache
 from bs4 import BeautifulSoup
-from django.db.models.expressions import result
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
@@ -18,6 +16,7 @@ from constants import (
 )
 from outputs import control_output
 from utils import get_response, find_tag
+
 
 def whats_new(session):
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
@@ -74,13 +73,14 @@ def latest_versions(session):
 
     return results
 
+
 def download(session):
     downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
     response = get_response(session, downloads_url)
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
-    tabel = find_tag(soup, 'table', attrs={'class':'docutils'})
+    tabel = find_tag(soup, 'table', attrs={'class': 'docutils'})
     pdf_a4_tag = tabel.find('a', {'href': re.compile(r'.+pdf-a4\.zip$')})
     pdf_a4_link = pdf_a4_tag['href']
     archive_url = urljoin(downloads_url, pdf_a4_link)
@@ -93,7 +93,8 @@ def download(session):
         file.write(response.content)
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
-def pep(session):
+
+def pep_versions(session):
     status_counter = {
         'Accepted': 0,
         'Active': 0,
@@ -122,7 +123,7 @@ def pep(session):
                         table_status = ''
                     else:
                         table_status = table_status.text[-1]
-                link = row.find('a', attrs={'class':'pep reference internal'})
+                link = row.find('a', attrs={'class': 'pep reference internal'})
                 if link:
                     pep_url = urljoin(PEPS_URL, link['href'])
                     response = get_response(session, pep_url)
@@ -153,12 +154,14 @@ def pep(session):
             results.append(('Всего', len(table_string)))
     return results
 
+
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
     'download': download,
-    'pep': pep,
+    'pep': pep_versions,
 }
+
 
 def main():
     configure_logging()

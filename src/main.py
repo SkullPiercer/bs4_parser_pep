@@ -111,8 +111,7 @@ def pep(session):
 
     log_different_statuses(different_statuses)
 
-    for i in status_counter.items():
-        results.append(i)
+    results.extend(status_counter.items())
     results.append(('Всего', len(status_counter)))
 
     return results

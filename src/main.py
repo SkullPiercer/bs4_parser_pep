@@ -95,7 +95,7 @@ def download(session):
 
 
 def pep(session):
-    status_counter = initialize_status_counter()
+    status_counter = {}
     response = get_response(session, PEPS_URL)
     if response is None:
         return
@@ -116,23 +116,9 @@ def pep(session):
     return results
 
 
-def initialize_status_counter():
-    return {
-        'Accepted': 0,
-        'Active': 0,
-        'Deferred': 0,
-        'Draft': 0,
-        'Final': 0,
-        'Provisional': 0,
-        'Rejected': 0,
-        'Superseded': 0,
-        'Withdrawn': 0,
-    }
-
-
 def process_section(section, soup, session, status_counter, different_statuses,
                     results):
-    content = soup.find('section', attrs={'id': section})
+    content = find_tag(soup, 'section', attrs={'id': section})
     if not content:
         return
 
@@ -143,18 +129,21 @@ def process_section(section, soup, session, status_counter, different_statuses,
 
 def process_row(row, session, status_counter, different_statuses):
     table_status = get_table_status(row)
-    link = row.find('a', attrs={'class': 'pep reference internal'})
+    link = find_tag(row, 'a', attrs={'class': 'pep reference internal'})
 
     if link:
         pep_url = urljoin(PEPS_URL, link['href'])
         page_status = get_page_status(session, pep_url)
-        update_status_counter(page_status, status_counter)
+        if page_status.text in status_counter:
+            status_counter[page_status.text] += 1
+        else:
+            status_counter[page_status.text] = 1
         check_status_mismatch(page_status, table_status, pep_url,
                               different_statuses)
 
 
 def get_table_status(row):
-    table_status = row.find('td')
+    table_status = find_tag(row, 'td')
     if table_status and len(table_status.text) > 1:
         return table_status.text[-1]
     return ''
@@ -162,15 +151,10 @@ def get_table_status(row):
 
 def get_page_status(session, pep_url):
     response = get_response(session, pep_url)
+    if response is None:
+        return
     soup = BeautifulSoup(response.text, 'lxml')
-    return soup.find('abbr')
-
-
-def update_status_counter(page_status, status_counter):
-    try:
-        status_counter[page_status.text] += 1
-    except KeyError:
-        logging.error(f'Неcуществующий статус: {page_status.text}')
+    return find_tag(soup, 'abbr')
 
 
 def check_status_mismatch(page_status, table_status, pep_url,
